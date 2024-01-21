@@ -1,90 +1,79 @@
-import { useState } from "react"
+import React, { useState, useCallback } from "react"
 import ToDoitem from "./ToDoitem"
 
-const ToDolist = () => {
-  const [inputValue, setInputValue] = useState('')
+const ToDoList = () => {
+  const [inputValue, setInputValue] = useState("")
   const [todoList, setTodoList] = useState([
-    { id: 1, todo: "Exercise", status: "todo" },
-    { id: 2, todo: "Study", status: "todo" }
-  ]);
-  const [doneList, setDoneList] = useState([]);
+    { id: 1, task: "Task 1", status: "todo" },
+    { id: 2, task: "Task 2", status: "todo" },
+  ])
+  const [doneList, setDoneList] = useState([])
 
   const onChange = (event) => {
-    const value = event.target.value;
-    setInputValue(value)
-  };
+    setInputValue(event.target.value)
+  }
 
   const addTask = (event) => {
     event.preventDefault()
 
+    if (inputValue.trim() === "") return
+
     const newTask = {
       id: todoList.length + 1,
-      todo: inputValue,
+      task: inputValue,
       status: "todo",
-    };
+    }
 
-    setTodoList([...todoList, newTask])
-    setInputValue('')
-  };
-
-  const removeTask = (id, status) => {
-    const updatedList =
-      status === "todo"
-        ? todoList.filter((task) => task.id !== id)
-        : doneList.filter((task) => task.id !== id);
-
-    setTodoList(updatedList);
-    setDoneList(status === "done" ? updatedList : doneList)
+    setTodoList((prevTodoList) => [...prevTodoList, newTask])
+    setInputValue("")
   }
 
-  const toggleStatus = (id) => {
-    const taskToUpdate = todoList.find((task) => task.id === id)
-
-    if (taskToUpdate) {
-      const updatedTodoList = todoList.filter((task) => task.id !== id)
-      const updatedDoneList = [...doneList, { ...taskToUpdate, status: "done" }]
-
-      setTodoList(updatedTodoList)
-      setDoneList(updatedDoneList)
+  const removeTask = useCallback((id, status) => {
+    if (status === "todo") {
+      setTodoList((prevTodoList) => prevTodoList.filter((task) => task.id !== id))
+    } else {
+      setDoneList((prevDoneList) => prevDoneList.filter((task) => task.id !== id))
     }
-  };
+  }, [])
 
-  const moveBackToTodo = (id) => {
-    const taskToUpdate = doneList.find((task) => task.id === id)
+  const toggleStatus = useCallback((id) => {
+    setTodoList((prevTodoList) => {
+      const taskToUpdate = prevTodoList.find((task) => task.id === id)
+      const updatedTodoList = prevTodoList.filter((task) => task.id !== id)
+      setDoneList((prevDoneList) => [...prevDoneList, { ...taskToUpdate, status: "done" }])
+      return updatedTodoList
+    })
+  }, [])
 
-    if (taskToUpdate) {
-      const updatedDoneList = doneList.filter((task) => task.id !== id)
-      const updatedTodoList = [...todoList, { ...taskToUpdate, status: "todo" }]
-
-      setTodoList(updatedTodoList)
-      setDoneList(updatedDoneList)
-    }
-  };
+  const moveBackToTodo = useCallback((id) => {
+    setDoneList((prevDoneList) => prevDoneList.filter((task) => task.id !== id))
+    setTodoList((prevTodoList) => {
+      const taskToUpdate = doneList.find((task) => task.id === id)
+      return taskToUpdate ? [...prevTodoList, { ...taskToUpdate, status: "todo" }] : prevTodoList
+    })
+  }, [doneList])
 
   return (
     <div className="to-do-list">
       <h3>To Do List</h3>
-
       <form onSubmit={addTask} className="form">
         <input type="text" onChange={onChange} value={inputValue} />
         <button type="submit">Add Task</button>
       </form>
-
       <div className="column">
         <h4>To Do</h4>
         {todoList.map((task) => (
           <ToDoitem key={task.id} task={task} removeTask={removeTask} toggleStatus={toggleStatus} moveBackToTodo={moveBackToTodo} />
         ))}
       </div>
-
       <div className="column">
-        <h4>Done </h4>
+        <h4>Done</h4>
         {doneList.map((task) => (
           <ToDoitem key={task.id} task={task} removeTask={removeTask} toggleStatus={toggleStatus} moveBackToTodo={moveBackToTodo} />
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ToDolist
+export default ToDoList

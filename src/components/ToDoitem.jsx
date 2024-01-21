@@ -2,7 +2,7 @@ import React from 'react'
 
 
 const ToDoitem = ({task, removeTask, toggleStatus, moveBackToTodo}) =>   {  
-  console.log( `${task.id}`);
+  console.log( `${task.id}`)
   
         return (
       <div className="list-item">
