@@ -3,11 +3,10 @@ import ToDoitem from "./ToDoitem"
 
 const ToDoList = () => {
   const [inputValue, setInputValue] = useState("")
-  const [todoList, setTodoList] = useState([
-    { id: 1, task: "Task 1", status: "todo" },
-    { id: 2, task: "Task 2", status: "todo" },
+  const [taskList, setTaskList] = useState([
+    { id: 1, task: "Exercise", status: "todo" },
+    { id: 2, task: "Study", status: "todo" }
   ])
-  const [doneList, setDoneList] = useState([])
 
   const onChange = (event) => {
     setInputValue(event.target.value)
@@ -16,42 +15,28 @@ const ToDoList = () => {
   const addTask = (event) => {
     event.preventDefault()
 
-    if (inputValue.trim() === "") return
 
     const newTask = {
-      id: todoList.length + 1,
+      id: taskList.length + 1,
       task: inputValue,
-      status: "todo",
+      status: "todo"
     }
 
-    setTodoList((prevTodoList) => [...prevTodoList, newTask])
+    setTaskList((prevTaskList) => [...prevTaskList, newTask])
     setInputValue("")
   }
 
-  const removeTask = useCallback((id, status) => {
-    if (status === "todo") {
-      setTodoList((prevTodoList) => prevTodoList.filter((task) => task.id !== id))
-    } else {
-      setDoneList((prevDoneList) => prevDoneList.filter((task) => task.id !== id))
-    }
+  const updateStatus = useCallback((id, newStatus) => {
+    setTaskList((prevTaskList) =>
+      prevTaskList.map((task) =>
+        task.id === id ? { ...task, status: newStatus } : task
+      )
+    )
   }, [])
 
-  const toggleStatus = useCallback((id) => {
-    setTodoList((prevTodoList) => {
-      const taskToUpdate = prevTodoList.find((task) => task.id === id)
-      const updatedTodoList = prevTodoList.filter((task) => task.id !== id)
-      setDoneList((prevDoneList) => [...prevDoneList, { ...taskToUpdate, status: "done" }])
-      return updatedTodoList
-    })
+  const removeTask = useCallback((id) => {
+    setTaskList((prevTaskList) => prevTaskList.filter((task) => task.id !== id))
   }, [])
-
-  const moveBackToTodo = useCallback((id) => {
-    setDoneList((prevDoneList) => prevDoneList.filter((task) => task.id !== id))
-    setTodoList((prevTodoList) => {
-      const taskToUpdate = doneList.find((task) => task.id === id)
-      return taskToUpdate ? [...prevTodoList, { ...taskToUpdate, status: "todo" }] : prevTodoList
-    })
-  }, [doneList])
 
   return (
     <div className="to-do-list">
@@ -62,15 +47,19 @@ const ToDoList = () => {
       </form>
       <div className="column">
         <h4>To Do</h4>
-        {todoList.map((task) => (
-          <ToDoitem key={task.id} task={task} removeTask={removeTask} toggleStatus={toggleStatus} moveBackToTodo={moveBackToTodo} />
-        ))}
+        {taskList
+          .filter((task) => task.status === "todo")
+          .map((task) => (
+            <ToDoitem key={task.id} task={task} updateStatus={updateStatus} removeTask={removeTask} />
+          ))}
       </div>
       <div className="column">
         <h4>Done</h4>
-        {doneList.map((task) => (
-          <ToDoitem key={task.id} task={task} removeTask={removeTask} toggleStatus={toggleStatus} moveBackToTodo={moveBackToTodo} />
-        ))}
+        {taskList
+          .filter((task) => task.status === "done")
+          .map((task) => (
+            <ToDoitem key={task.id} task={task} updateStatus={updateStatus} removeTask={removeTask} />
+          ))}
       </div>
     </div>
   )
